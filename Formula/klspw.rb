@@ -6,26 +6,25 @@ class Klspw < Formula
   license "MIT"
 
   depends_on "cmake" => :build
+  depends_on "ninja" => :build
   depends_on "cli11"
   depends_on "glaze"
   depends_on "reproc"
   depends_on "spdlog"
 
   def install
-    system "cmake", "-S", ".", "-B", "build",
-           *std_cmake_args
+    system "cmake", "-S", ".", "-B", "build", "-G", "Ninja", *std_cmake_args
     system "cmake", "--build", "build"
     system "cmake", "--install", "build"
   end
 
   test do
-    # init subcommand generates a starter config for a Gradle root
+    assert_match version.to_s, shell_output("#{bin}/klspw --version")
+
     (testpath/"fake-root").mkpath
     (testpath/"fake-root/build.gradle.kts").write("")
     output = shell_output("#{bin}/klspw init #{testpath}/fake-root")
+    assert_match "version: 1", output
     assert_match "roots:", output
-
-    # --version should print the version
-    assert_match version.to_s, shell_output("#{bin}/klspw --version")
   end
 end
