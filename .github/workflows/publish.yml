@@ -14,6 +14,8 @@ jobs:
     if: >
       github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    concurrency: publish
+    timeout-minutes: 10
     permissions:
       actions: read
       checks: read
@@ -35,7 +37,21 @@ jobs:
               core.info('No PR associated with this workflow run, skipping.');
               return '';
             }
-            return String(prs[0].number);
+            const prNumber = prs[0].number;
+
+            // Check if the PR changed any formula files
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+            const hasFormulaChange = files.some(f => f.filename.startsWith('Formula/'));
+            if (!hasFormulaChange) {
+              core.info(`PR #${prNumber} has no formula changes, skipping bottle publish.`);
+              return '';
+            }
+
+            return String(prNumber);
           result-encoding: string
 
       - name: Set up Homebrew

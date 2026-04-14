@@ -4,27 +4,31 @@ name: Verify
 # Installs from the tap on each platform and confirms the bottle poured.
 on:
   workflow_run:
-    workflows: [ "Publish" ]
+    workflows: ["Publish"]
     types:
       - completed
+  workflow_dispatch:
 
 jobs:
   verify:
-    if: github.event.workflow_run.conclusion == 'success'
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     strategy:
+      fail-fast: false
       matrix:
-        os: [ macos-26-intel, macos-26 ]
+        os: [macos-26-intel, macos-26]
         include:
           - os: ubuntu-latest
             container: ghcr.io/homebrew/brew:main
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container }}
+    timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
       - name: Install from tap
-        env:
-          TAP: ${{ github.repository }}
-        run: |
-          brew install "${TAP/homebrew-/}/klspw"
+        run: brew install Unril/tap/klspw
 
       - name: Verify version
         run: klspw --version

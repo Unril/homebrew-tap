@@ -20,13 +20,15 @@ concurrency:
 jobs:
   test-bot:
     strategy:
+      fail-fast: false
       matrix:
-        os: [ macos-26-intel, macos-26 ]
+        os: [macos-26-intel, macos-26]
         include:
           - os: ubuntu-latest
             container: ghcr.io/homebrew/brew:main
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container }}
+    timeout-minutes: 30
     permissions:
       actions: read
       checks: read

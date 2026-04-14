@@ -64,15 +64,15 @@ Runs on PRs, pushes to `main` (when formula or workflow files change), and manua
 
 `macos-26` runners are required (not `macos-15`) because klspw uses C++23 features (`std::ranges::to`) that need the libc++ shipping with Xcode 26. Xcode 16.x on `macos-15` does not include `std::ranges::to`.
 
-On PRs, the workflow builds bottles and uploads them as GitHub Actions artifacts. On pushes to `main`, it only runs syntax and setup checks (no bottle build). Path filters skip CI for README-only or docs-only changes.
+On PRs, the workflow builds bottles and uploads them as GitHub Actions artifacts. On pushes to `main`, it only runs syntax and setup checks (no bottle build). Path filters skip CI for README-only or docs-only changes. `fail-fast: false` ensures all three platforms complete even if one fails.
 
 ### publish.yml (Publish)
 
-Triggers automatically via `workflow_run` when CI completes successfully on a PR. No manual labeling needed. It extracts the PR number, runs `brew pr-pull` to download bottle artifacts, adds the `bottle do` block to the formula, pushes to `main`, and uploads bottles to GitHub Releases.
+Triggers automatically via `workflow_run` when CI completes successfully on a PR. No manual labeling needed. It extracts the PR number, checks whether the PR actually changed formula files (skips workflow-only PRs), then runs `brew pr-pull` to download bottle artifacts, adds the `bottle do` block to the formula, pushes to `main`, and uploads bottles to GitHub Releases. A concurrency lock prevents parallel publish runs from racing.
 
 ### verify.yml (Verify)
 
-Triggers automatically via `workflow_run` when Publish completes successfully. Installs klspw from the tap on all three platforms and runs basic smoke tests to confirm the bottle poured correctly and the binary works.
+Triggers automatically via `workflow_run` when Publish completes successfully. Also supports manual dispatch for on-demand verification. Installs klspw from the tap on all three platforms and runs basic smoke tests to confirm the bottle poured correctly and the binary works. `fail-fast: false` ensures all platforms report independently.
 
 ## Release flow
 
