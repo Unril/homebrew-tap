@@ -22,7 +22,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-26-intel, macos-26]
+        # No macos-26-intel: Homebrew is phasing out Intel macOS support (Tier 3
+        # from Sep 2026). homebrew-core no longer guarantees Intel bottles for all
+        # deps, so brew test-bot skips bottle builds on Intel. Intel users can
+        # still build from source.
+        os: [macos-26]
         include:
           - os: ubuntu-latest
             container: ghcr.io/homebrew/brew:main
