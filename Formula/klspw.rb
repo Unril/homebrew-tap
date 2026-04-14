@@ -31,8 +31,8 @@ class Klspw < Formula
   test do
     assert_match version.to_s, shell_output("#{bin}/klspw --version")
 
-    (testpath/"fake-root").mkpath
-    (testpath/"fake-root/build.gradle.kts").write("")
+    (testpath / "fake-root").mkpath
+    (testpath / "fake-root/build.gradle.kts").write("")
     output = shell_output("#{bin}/klspw init #{testpath}/fake-root")
     assert_match "version: 1", output
     assert_match "roots:", output

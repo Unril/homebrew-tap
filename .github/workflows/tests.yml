@@ -15,7 +15,7 @@ jobs:
   test-bot:
     strategy:
       matrix:
-        os: [macos-26-intel, macos-26]
+        os: [ macos-26-intel, macos-26 ]
         include:
           - os: ubuntu-latest
             container: ghcr.io/homebrew/brew:main
@@ -64,4 +64,4 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: bottles_${{ matrix.os }}
-          path: '*.bottle.*'
+          path: "*.bottle.*"

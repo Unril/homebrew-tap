@@ -27,16 +27,16 @@ Prebuilt binaries by default, source build as fallback. Homebrew bottles handle 
 
 The source repo uses vcpkg for development builds, but the formula does not. It declares each dependency with `depends_on` and lets Homebrew provide them. All deps are in Homebrew core:
 
-| Dependency | Role                                      |
-| ---------- | ----------------------------------------- |
-| cmake      | Build-time only                           |
-| ninja      | Build-time only                           |
-| cli11      | CLI parsing                               |
-| fmt        | String formatting (indirect, via spdlog)  |
-| glaze      | JSON/YAML serialization                   |
-| reproc     | Subprocess execution (reproc++)           |
-| spdlog     | Logging                                   |
-| gcc        | Linux only, GCC 15 for C++23 support      |
+| Dependency | Role                                     |
+| ---------- | ---------------------------------------- |
+| cmake      | Build-time only                          |
+| ninja      | Build-time only                          |
+| cli11      | CLI parsing                              |
+| fmt        | String formatting (indirect, via spdlog) |
+| glaze      | JSON/YAML serialization                  |
+| reproc     | Subprocess execution (reproc++)          |
+| spdlog     | Logging                                  |
+| gcc        | Linux only, GCC 15 for C++23 support     |
 
 `doctest` (testing) is not needed because `std_cmake_args` passes `-DBUILD_TESTING=OFF`.
 
