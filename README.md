@@ -1,8 +1,8 @@
 # Unril Tap
 
-Homebrew formulae for [klspw](https://github.com/Unril/klspw) -- a CLI tool that generates `workspace.json` for kotlin-lsp from Gradle builds.
+Homebrew formula for [klspw](https://github.com/Unril/klspw) -- a CLI tool that generates `workspace.json` for kotlin-lsp from Gradle builds.
 
-## How do I install these formulae?
+## How do I install this formula?
 
 ```bash
 brew install Unril/tap/klspw
@@ -50,13 +50,11 @@ system "cmake", "--install", "build"
 
 `std_cmake_args` provides `-DCMAKE_INSTALL_PREFIX`, `-DCMAKE_BUILD_TYPE=Release`, `-DBUILD_TESTING=OFF`, and other standard flags. CMake finds Homebrew-installed packages via `CMAKE_PREFIX_PATH` set by Homebrew's superenv.
 
-The `sha256` is `TODO_REPLACE_WITH_ACTUAL_SHA256` until the v0.1.0 tag is pushed on the source repo.
-
 ## Workflows
 
-### tests.yml (brew test-bot)
+### ci.yml (CI)
 
-Runs on every push to `main`, on PRs, and on manual dispatch. Builds and tests the formula on three platforms:
+Runs on PRs, pushes to `main` (when formula or workflow files change), and manual dispatch. Builds and tests the formula on three platforms:
 
 | Runner           | Platform                              |
 | ---------------- | ------------------------------------- |
@@ -66,51 +64,24 @@ Runs on every push to `main`, on PRs, and on manual dispatch. Builds and tests t
 
 `macos-26` runners are required (not `macos-15`) because klspw uses C++23 features (`std::ranges::to`) that need the libc++ shipping with Xcode 26. Xcode 16.x on `macos-15` does not include `std::ranges::to`.
 
-On PRs, the workflow builds bottles and uploads them as GitHub Actions artifacts. On pushes to `main`, it only runs syntax and setup checks (no bottle build).
+On PRs, the workflow builds bottles and uploads them as GitHub Actions artifacts. On pushes to `main`, it only runs syntax and setup checks (no bottle build). Path filters skip CI for README-only or docs-only changes.
 
-### publish.yml (brew pr-pull)
+### publish.yml (Publish)
 
-Triggers when a PR is labeled `pr-pull`. It downloads the bottle artifacts built by `tests.yml`, adds the `bottle do ... end` block to the formula, and pushes to `main`. Bottles are uploaded to the tap repo's GitHub Releases.
+Triggers automatically via `workflow_run` when CI completes successfully on a PR. No manual labeling needed. It extracts the PR number, runs `brew pr-pull` to download bottle artifacts, adds the `bottle do` block to the formula, pushes to `main`, and uploads bottles to GitHub Releases.
 
-This workflow does not support `workflow_dispatch` because `brew pr-pull` requires the `github.event.pull_request` context (PR number, head ref) which is only available from the `pull_request_target` event.
+### verify.yml (Verify)
+
+Triggers automatically via `workflow_run` when Publish completes successfully. Installs klspw from the tap on all three platforms and runs basic smoke tests to confirm the bottle poured correctly and the binary works.
 
 ## Release flow
 
 Updates must go through a PR, not a direct push to `main`. The bottle build pipeline depends on this:
 
-- `tests.yml` only builds bottles on `pull_request` events (the `--only-formulae` and upload steps are skipped on pushes to `main`)
-- `publish.yml` needs a PR to label with `pr-pull` so `brew pr-pull` can download bottle artifacts and commit the `bottle do` block
+- CI only builds bottles on `pull_request` events (the `--only-formulae` and upload steps are skipped on pushes to `main`)
+- Publish needs a completed PR CI run to download bottle artifacts from
 
 Pushing directly to `main` would produce a working source-build formula but no bottles, forcing every user to compile from source.
-
-### Initial release
-
-1. Push the `v0.1.0` tag on [Unril/klspw](https://github.com/Unril/klspw) (the existing `release.yml` creates a GitHub Release)
-2. Get the source tarball sha256:
-
-   ```bash
-   curl -sL https://github.com/Unril/klspw/archive/refs/tags/v0.1.0.tar.gz | shasum -a 256
-   ```
-
-3. Create a branch on this tap repo:
-
-   ```bash
-   git checkout -b klspw-0.1.0
-   ```
-
-4. Replace `TODO_REPLACE_WITH_ACTUAL_SHA256` in `Formula/klspw.rb` with the actual sha256
-5. Optionally test the source build locally:
-
-   ```bash
-   HOMEBREW_NO_INSTALL_FROM_API=1 brew install --build-from-source Unril/tap/klspw
-   brew test klspw
-   brew audit --strict Unril/tap/klspw
-   ```
-
-6. Commit, push, and open a PR
-7. Wait for `tests.yml` to build bottles (all three platforms must pass)
-8. Label the PR `pr-pull`
-9. `publish.yml` runs `brew pr-pull`, which adds the `bottle do` block to the formula and pushes to `main`
 
 ### Updating to a new version
 
@@ -135,8 +106,9 @@ Pushing directly to `main` would produce a working source-build formula but no b
 
 5. Update `url` and `sha256` in `Formula/klspw.rb`, remove any existing `bottle do` block
 6. Commit, push, and open a PR
-7. Wait for `tests.yml` to build bottles
-8. Label the PR `pr-pull` to publish
+7. CI builds bottles automatically
+8. On success, Publish runs `brew pr-pull` automatically
+9. Verify confirms the install works on all platforms
 
 ## Documentation
 

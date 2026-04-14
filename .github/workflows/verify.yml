@@ -1,0 +1,36 @@
+name: Verify
+
+# Runs after Publish pushes bottle metadata to main.
+# Installs from the tap on each platform and confirms the bottle poured.
+on:
+  workflow_run:
+    workflows: [ "Publish" ]
+    types:
+      - completed
+
+jobs:
+  verify:
+    if: github.event.workflow_run.conclusion == 'success'
+    strategy:
+      matrix:
+        os: [ macos-26-intel, macos-26 ]
+        include:
+          - os: ubuntu-latest
+            container: ghcr.io/homebrew/brew:main
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
+    steps:
+      - name: Install from tap
+        env:
+          TAP: ${{ github.repository }}
+        run: |
+          brew install "${TAP/homebrew-/}/klspw"
+
+      - name: Verify version
+        run: klspw --version
+
+      - name: Verify basic functionality
+        run: |
+          mkdir -p /tmp/verify-test
+          echo "" > /tmp/verify-test/build.gradle.kts
+          klspw init /tmp/verify-test

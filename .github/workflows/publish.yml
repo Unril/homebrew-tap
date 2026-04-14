@@ -1,44 +1,68 @@
-name: brew pr-pull
+name: Publish
 
-# No workflow_dispatch: brew pr-pull needs github.event.pull_request context
-# (PR number, head ref) which is only available from pull_request_target.
+# Triggers automatically when CI completes successfully on a PR.
+# brew pr-pull downloads bottle artifacts, adds the bottle do block,
+# and pushes to main.
 on:
-  pull_request_target:
+  workflow_run:
+    workflows: [ "CI" ]
     types:
-      - labeled
+      - completed
 
 jobs:
   pr-pull:
-    if: contains(github.event.pull_request.labels.*.name, 'pr-pull')
+    if: >
+      github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     permissions:
       actions: read
       checks: read
       contents: write
-      issues: read
       pull-requests: write
     steps:
+      - name: Get PR number
+        id: pr
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const run = await github.rest.actions.getWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.payload.workflow_run.id,
+            });
+            const prs = run.data.pull_requests;
+            if (!prs || prs.length === 0) {
+              core.info('No PR associated with this workflow run, skipping.');
+              return '';
+            }
+            return String(prs[0].number);
+          result-encoding: string
+
       - name: Set up Homebrew
+        if: steps.pr.outputs.result != ''
         uses: Homebrew/actions/setup-homebrew@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up git
+        if: steps.pr.outputs.result != ''
         uses: Homebrew/actions/git-user-config@main
 
       - name: Pull bottles
+        if: steps.pr.outputs.result != ''
         env:
           HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PULL_REQUEST: ${{ github.event.pull_request.number }}
+          PULL_REQUEST: ${{ steps.pr.outputs.result }}
         run: brew pr-pull --debug --tap="$GITHUB_REPOSITORY" "$PULL_REQUEST"
 
       - name: Push commits
+        if: steps.pr.outputs.result != ''
         uses: Homebrew/actions/git-try-push@main
         with:
           branch: main
 
       - name: Delete branch
-        if: github.event.pull_request.head.repo.fork == false
+        if: steps.pr.outputs.result != '' && github.event.workflow_run.head_repository.fork == false
         env:
-          BRANCH: ${{ github.event.pull_request.head.ref }}
-        run: git push --delete origin "$BRANCH"
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+        run: git push --delete origin -- "$BRANCH"
