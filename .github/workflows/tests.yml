@@ -42,7 +42,8 @@ jobs:
 
       - name: Validate formula checksums
         run: |
-          for f in $(brew --repository ${{github.repository}})/Formula/*.rb; do
+          dir="$(brew --repository "${{github.repository}}")/Formula"
+          for f in "$dir"/*.rb; do
             if grep -q 'TODO_REPLACE' "$f"; then
               echo "::error file=${f##*/}::sha256 placeholder not replaced -- update with actual checksum before merging"
               exit 1
