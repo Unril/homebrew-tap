@@ -99,4 +99,4 @@ jobs:
           github.event.workflow_run.head_repository.fork == false
         env:
           BRANCH: ${{ github.event.workflow_run.head_branch }}
-        run: git push --delete origin -- "$BRANCH"
+        run: git push --delete origin -- "refs/heads/$BRANCH"
