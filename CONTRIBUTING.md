@@ -56,7 +56,7 @@ On PRs, the workflow builds bottles and uploads them as GitHub Actions artifacts
 
 ### publish.yml (Publish)
 
-Triggers automatically via `workflow_run` when CI completes successfully on a PR. No manual labeling needed. It extracts the PR number, checks whether the PR actually changed formula files (skips workflow-only PRs), then runs `brew pr-pull` to download bottle artifacts, adds the `bottle do` block to the formula, pushes to `main`, and uploads bottles to GitHub Releases. A concurrency lock prevents parallel publish runs from racing.
+Triggers automatically via `workflow_run` when CI completes successfully on a PR. Also supports manual dispatch with a PR number for retries. It extracts the PR number, checks whether the PR actually changed formula files (skips workflow-only PRs), then runs `brew pr-pull` to download bottle artifacts, adds the `bottle do` block to the formula, pushes to `main`, and uploads bottles to GitHub Releases. A concurrency lock prevents parallel publish runs from racing.
 
 ### verify.yml (Verify)
 
@@ -64,39 +64,37 @@ Triggers automatically via `workflow_run` when Publish completes successfully. A
 
 ## Release flow
 
-Updates must go through a PR, not a direct push to `main`. The bottle build pipeline depends on this:
+The source repo (`Unril/klspw`) has an `update-tap.yml` workflow that automates tap updates. When a release is published in the source repo, it computes the tarball sha256, updates the formula, and opens a PR on this tap repo automatically.
 
-- CI only builds bottles on `pull_request` events (the `--only-formulae` and upload steps are skipped on pushes to `main`)
-- Publish needs a completed PR CI run to download bottle artifacts from
+The automated flow:
 
-Pushing directly to `main` would produce a working source-build formula but no bottles, forcing every user to compile from source.
+1. Tag and push in the source repo: `git tag v0.2.0 && git push origin v0.2.0`
+2. Source repo `release.yml` creates a GitHub Release
+3. Source repo `update-tap.yml` opens a PR on this tap with the updated formula
+4. Tap CI builds bottles automatically
+5. On success, Publish runs `brew pr-pull` automatically
+6. Verify confirms the install works on both platforms
 
-### Updating to a new version
+### Manual release (fallback)
 
-1. Update version in `CMakeLists.txt` and `vcpkg.json` in the source repo
-2. Tag and push:
+If the automated flow fails or you need to update the formula manually:
 
-   ```bash
-   git tag v0.2.0 && git push origin v0.2.0
-   ```
-
-3. Get the new sha256:
+1. Get the new sha256:
 
    ```bash
    curl -sL https://github.com/Unril/klspw/archive/refs/tags/v0.2.0.tar.gz | shasum -a 256
    ```
 
-4. Create a branch on this tap repo:
+2. Create a branch on this tap repo:
 
    ```bash
    git checkout -b klspw-0.2.0
    ```
 
-5. Update `url` and `sha256` in `Formula/klspw.rb`, remove any existing `bottle do` block
-6. Commit, push, and open a PR
-7. CI builds bottles automatically
-8. On success, Publish runs `brew pr-pull` automatically
-9. Verify confirms the install works on all platforms
+3. Update `url` and `sha256` in `Formula/klspw.rb`, remove any existing `bottle do` block
+4. Commit, push, and open a PR
+5. CI builds bottles automatically
+6. On success, Publish runs `brew pr-pull` automatically
 
 ## Documentation
 

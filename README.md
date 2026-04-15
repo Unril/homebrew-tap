@@ -1,8 +1,9 @@
 # Unril Tap
 
-[![CI](https://github.com/Unril/homebrew-tap/actions/workflows/ci.yml/badge.svg)](https://github.com/Unril/homebrew-tap/actions/workflows/ci.yml)
-[![Publish](https://github.com/Unril/homebrew-tap/actions/workflows/publish.yml/badge.svg)](https://github.com/Unril/homebrew-tap/actions/workflows/publish.yml)
-[![Verify](https://github.com/Unril/homebrew-tap/actions/workflows/verify.yml/badge.svg)](https://github.com/Unril/homebrew-tap/actions/workflows/verify.yml)
+[![CI](https://github.com/Unril/homebrew-tap/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Unril/homebrew-tap/actions/workflows/ci.yml)
+[![Publish](https://github.com/Unril/homebrew-tap/actions/workflows/publish.yml/badge.svg?branch=main)](https://github.com/Unril/homebrew-tap/actions/workflows/publish.yml)
+[![Verify](https://github.com/Unril/homebrew-tap/actions/workflows/verify.yml/badge.svg?branch=main)](https://github.com/Unril/homebrew-tap/actions/workflows/verify.yml)
+[![Release](https://img.shields.io/github/v/release/Unril/homebrew-tap?sort=semver)](https://github.com/Unril/homebrew-tap/releases)
 
 Homebrew formula for [klspw](https://github.com/Unril/klspw) -- a CLI tool that generates `workspace.json` for kotlin-lsp from Gradle builds.
 
