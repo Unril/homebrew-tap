@@ -5,6 +5,12 @@ class Klspw < Formula
   sha256 "9c2c750ebfed8133ccba2d6de55da7ba7f1556f33e5a80843529bc81373c46b3"
   license "MIT"
 
+  bottle do
+    root_url "https://github.com/Unril/homebrew-tap/releases/download/klspw-0.1.2"
+    sha256 cellar: :any,                 arm64_tahoe:  "6b6041be22ee0c70aa17bbc033a63bd4266052570fc2510e52bd4fe56b7b6455"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "719258be2711ff4faf0221c323807b1aadce73a25e652492a3b66fff46f0741f"
+  end
+
   depends_on "cmake" => :build
   depends_on "ninja" => :build
   depends_on "cli11"
