@@ -1,6 +1,7 @@
 name: Publish
 
 # Triggers automatically when CI completes successfully on a PR.
+# Can also be triggered manually with a PR number.
 # brew pr-pull downloads bottle artifacts, adds the bottle do block,
 # and pushes to main.
 on:
@@ -8,11 +9,17 @@ on:
     workflows: ["CI"]
     types:
       - completed
+  workflow_dispatch:
+    inputs:
+      pull_request:
+        description: "PR number to publish bottles for"
+        required: true
 
 jobs:
   pr-pull:
     if: >
-      github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     concurrency: publish
     timeout-minutes: 10
@@ -27,6 +34,14 @@ jobs:
         uses: actions/github-script@v9
         with:
           script: |
+            // Manual trigger: use the input directly
+            if (context.eventName === 'workflow_dispatch') {
+              const prNumber = context.payload.inputs.pull_request;
+              core.info(`Manual trigger for PR #${prNumber}`);
+              return prNumber;
+            }
+
+            // Automatic trigger: extract from workflow run
             const run = await github.rest.actions.getWorkflowRun({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -78,7 +93,10 @@ jobs:
           branch: main
 
       - name: Delete branch
-        if: steps.pr.outputs.result != '' && github.event.workflow_run.head_repository.fork == false
+        if: >
+          steps.pr.outputs.result != '' &&
+          github.event_name != 'workflow_dispatch' &&
+          github.event.workflow_run.head_repository.fork == false
         env:
           BRANCH: ${{ github.event.workflow_run.head_branch }}
         run: git push --delete origin -- "$BRANCH"
