@@ -1,16 +1,10 @@
 class Klspw < Formula
   desc "Generate workspace.json for kotlin-lsp from Gradle builds"
   homepage "https://github.com/Unril/klspw"
-  url "https://github.com/Unril/klspw/archive/refs/tags/v0.1.0.tar.gz"
-  sha256 "a415cd1b791c892f78be25f1bc2a3ae1ddd2757843236b9dc2f1d87578917929"
+  url "https://github.com/Unril/klspw/archive/refs/tags/v0.1.1.tar.gz"
+  sha256 "6e8f3d48d847deb05f41619146dca14a0e58f3433638b8ace6bc76a1dbe6f525"
   license "MIT"
 
-  bottle do
-    root_url "https://github.com/Unril/homebrew-tap/releases/download/klspw-0.1.0"
-    rebuild 1
-    sha256 cellar: :any,                 arm64_tahoe:  "f9e1f87e719c8dccede16c7b1316f60d81631527b34bc615fad431a9985fce63"
-    sha256 cellar: :any_skip_relocation, x86_64_linux: "663280c135b0e7c273327522f7934f5a2445813bbbfa645c7af93a128b2631cf"
-  end
 
   depends_on "cmake" => :build
   depends_on "ninja" => :build
