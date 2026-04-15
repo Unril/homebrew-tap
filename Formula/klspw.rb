@@ -5,7 +5,6 @@ class Klspw < Formula
   sha256 "6e8f3d48d847deb05f41619146dca14a0e58f3433638b8ace6bc76a1dbe6f525"
   license "MIT"
 
-
   depends_on "cmake" => :build
   depends_on "ninja" => :build
   depends_on "cli11"
